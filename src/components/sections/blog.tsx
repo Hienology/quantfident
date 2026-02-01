@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Section } from "./section";
 import { BlogDbService } from '@/lib/services/blog-db-service';
 import { Calendar, Clock, User, ArrowRight, Search } from 'lucide-react';
-import type { BlogPost, BlogCategory, BLOG_CATEGORIES } from '@/types/blog';
+import type { BlogPost, BlogCategory } from '@/types/blog';
+import { BLOG_CATEGORIES } from '@/types/blog';
 
 export function Blog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);

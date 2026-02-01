@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Save, Eye, EyeOff } from 'lucide-react';
-import type { BlogPostForm, BlogCategory, BLOG_CATEGORIES } from '@/types/blog';
+import type { BlogPostForm, BlogCategory } from '@/types/blog';
+import { BLOG_CATEGORIES } from '@/types/blog';
 
 // Dynamically import ReactQuill to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill'), {
