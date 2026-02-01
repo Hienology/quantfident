@@ -12,7 +12,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mock authentication
+    // Mock authentication - Admin user
+    if (email === 'tribd.tec@gmail.com' && password === 'AdminTest123!@') {
+      // Admin successful login
+      return NextResponse.json({
+        message: 'Đăng nhập thành công',
+        user: {
+          id: 'admin-001',
+          email: 'tribd.tec@gmail.com',
+          name: 'Admin User',
+          role: 'admin',
+          emailVerified: true
+        },
+        // Mock admin session token
+        token: 'mock-admin-jwt-token-abc123xyz'
+      });
+    }
+
+    // Mock authentication - Test user
     if (email === 'test@example.com' && password === 'password123') {
       // Mock successful login
       return NextResponse.json({
@@ -20,7 +37,9 @@ export async function POST(request: NextRequest) {
         user: {
           id: '123',
           email: 'test@example.com',
-          name: 'Test User'
+          name: 'Test User',
+          role: 'user',
+          emailVerified: false
         },
         // Mock session token
         token: 'mock-jwt-token-12345'
