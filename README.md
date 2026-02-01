@@ -39,6 +39,8 @@ Dev server: `http://localhost:3000`
 - `POST /api/apply` accepts JSON body with fields: name, email, contact, school, cv, github, goal, experience, availability, question
 - Validates via zod; appends to `/tmp/applications.json`; logs to server console
 
+<!-- redeploy: trigger build -->
+
 ### Notes
 - Images use `next/image` when added
 - Animations are lazy-in-view
