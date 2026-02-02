@@ -5,17 +5,29 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { BlogDbService } from '@/lib/services/blog-db-service';
 
-// Initialize Firebase Admin (only once)
-if (!getApps().length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!);
+let adminAuth: ReturnType<typeof getAuth> | null = null;
 
-  initializeApp({
-    credential: cert(serviceAccount),
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  });
-}
+const getAdminAuth = () => {
+  if (adminAuth) {
+    return adminAuth;
+  }
 
-const adminAuth = getAuth();
+  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (!serviceAccountKey) {
+    throw new Error('Firebase Admin not configured');
+  }
+
+  if (!getApps().length) {
+    const serviceAccount = JSON.parse(serviceAccountKey);
+    initializeApp({
+      credential: cert(serviceAccount),
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    });
+  }
+
+  adminAuth = getAuth();
+  return adminAuth;
+};
 
 export interface AuthenticatedUser {
   uid: string;
@@ -32,7 +44,7 @@ export interface AuthenticatedUser {
 export async function verifyIdToken(token: string, checkRevoked: boolean = false): Promise<AuthenticatedUser | null> {
   try {
     // Verify token with Firebase Admin
-    const decodedToken = await adminAuth.verifyIdToken(token, checkRevoked);
+    const decodedToken = await getAdminAuth().verifyIdToken(token, checkRevoked);
 
     // Upsert user in Postgres via Prisma
     await BlogDbService.upsertUser({
