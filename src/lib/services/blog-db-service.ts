@@ -4,14 +4,32 @@ import type { BlogPost, BlogPostForm, BlogCategory } from '@/types/blog';
 import { BLOG_CATEGORIES } from '@/types/blog';
 
 // Convert Prisma BlogPost to our BlogPost type
-const prismaToBlogPost = (post: any): BlogPost => ({
+const prismaToBlogPost = (post: {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string | null;
+  authorId: string;
+  status: string;
+  tags: string[];
+  category: string;
+  featuredImage: string | null;
+  readingTime: number;
+  views: number;
+  likes: number;
+  createdAt: Date;
+  updatedAt: Date;
+  publishedAt: Date | null;
+  author: { displayName: string | null; email: string };
+}): BlogPost => ({
   id: post.id,
   title: post.title,
   slug: post.slug,
   content: post.content,
   excerpt: post.excerpt || '',
   authorId: post.authorId,
-  authorName: post.author.authorName || post.author.displayName || 'Anonymous',
+  authorName: post.author.displayName || 'Anonymous',
   authorEmail: post.author.email,
   status: post.status.toLowerCase() as 'draft' | 'published' | 'archived',
   tags: post.tags || [],

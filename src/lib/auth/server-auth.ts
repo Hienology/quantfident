@@ -1,7 +1,6 @@
 // Server-side authentication utilities using Firebase Admin SDK
 // This file should only be used in API routes and server components
 
-import { auth } from 'firebase-admin';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { BlogDbService } from '@/lib/services/blog-db-service';
@@ -17,7 +16,6 @@ if (!getApps().length) {
 }
 
 const adminAuth = getAuth();
-const adminDb = db; // Using same Firestore instance
 
 export interface AuthenticatedUser {
   uid: string;
@@ -64,8 +62,8 @@ export async function verifyIdToken(token: string, checkRevoked: boolean = false
           uid: updatedUser.id,
           email: updatedUser.email,
           emailVerified: updatedUser.emailVerified,
-          displayName: updatedUser.displayName,
-          photoURL: updatedUser.photoURL,
+          displayName: updatedUser.displayName ?? undefined,
+          photoURL: updatedUser.photoURL ?? undefined,
           role: updatedUser.role.toLowerCase() as 'user' | 'admin',
           createdAt: updatedUser.createdAt,
           lastLoginAt: updatedUser.lastLoginAt || new Date(),
@@ -79,8 +77,8 @@ export async function verifyIdToken(token: string, checkRevoked: boolean = false
       uid: userData.id,
       email: userData.email,
       emailVerified: userData.emailVerified,
-      displayName: userData.displayName,
-      photoURL: userData.photoURL,
+      displayName: userData.displayName ?? undefined,
+      photoURL: userData.photoURL ?? undefined,
       role: userData.role.toLowerCase() as 'user' | 'admin',
       createdAt: userData.createdAt,
       lastLoginAt: userData.lastLoginAt || new Date(),
@@ -124,8 +122,8 @@ export async function getUserById(firebaseUid: string): Promise<AuthenticatedUse
       uid: userData.id,
       email: userData.email,
       emailVerified: userData.emailVerified,
-      displayName: userData.displayName,
-      photoURL: userData.photoURL,
+      displayName: userData.displayName ?? undefined,
+      photoURL: userData.photoURL ?? undefined,
       role: userData.role.toLowerCase() as 'user' | 'admin',
       createdAt: userData.createdAt,
       lastLoginAt: userData.lastLoginAt || new Date(),

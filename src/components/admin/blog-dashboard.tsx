@@ -130,7 +130,7 @@ export function BlogDashboard() {
       setEditingPost(null);
     } catch (error) {
       console.error('Error saving post:', error);
-      alert(error.message || 'Error saving post. Please try again.');
+      alert(error instanceof Error ? error.message : 'Error saving post. Please try again.');
     }
   };
 
@@ -154,7 +154,7 @@ export function BlogDashboard() {
       await loadPosts();
     } catch (error) {
       console.error('Error deleting post:', error);
-      alert(error.message || 'Error deleting post. Please try again.');
+      alert(error instanceof Error ? error.message : 'Error deleting post. Please try again.');
     }
   };
 
@@ -187,7 +187,7 @@ export function BlogDashboard() {
       await loadPosts();
     } catch (error) {
       console.error('Error updating post status:', error);
-      alert(error.message || 'Error updating post status. Please try again.');
+      alert(error instanceof Error ? error.message : 'Error updating post status. Please try again.');
     }
   };
 
@@ -211,7 +211,7 @@ export function BlogDashboard() {
           tags: editingPost.tags,
           category: editingPost.category,
           featuredImage: editingPost.featuredImage,
-          status: editingPost.status
+          status: editingPost.status === 'archived' ? 'draft' : editingPost.status as 'draft' | 'published'
         } : undefined}
         onSave={handleSavePost}
         onPreview={() => {}}
@@ -299,7 +299,7 @@ export function BlogDashboard() {
             />
           </div>
         </div>
-        <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
           <SelectTrigger className="w-40">
             <SelectValue />
           </SelectTrigger>

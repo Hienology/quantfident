@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,7 +39,6 @@ export function BlogEditor({ initialData, onSave, onPreview, loading = false }: 
 
   const [tagInput, setTagInput] = useState('');
   const [showPreview, setShowPreview] = useState(false);
-  const quillRef = useRef<any>();
 
   // Quill editor configuration
   const modules = {
@@ -232,7 +231,6 @@ export function BlogEditor({ initialData, onSave, onPreview, loading = false }: 
             <Label>Content *</Label>
             <div className="mt-1 border rounded-md">
               <ReactQuill
-                ref={quillRef}
                 theme="snow"
                 value={formData.content}
                 onChange={(content) => setFormData(prev => ({ ...prev, content }))}

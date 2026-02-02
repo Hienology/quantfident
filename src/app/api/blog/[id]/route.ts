@@ -5,8 +5,9 @@ import { requireAdmin, extractTokenFromHeader } from '@/lib/auth/server-auth';
 // GET /api/blog/[id] - Get specific post (for admin editing)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     // Check if user is admin (optional for viewing)
     const authHeader = request.headers.get('authorization');
@@ -16,7 +17,7 @@ export async function GET(
       await requireAdmin(token); // Only admins can view drafts
     }
 
-    const post = await BlogDbService.getPostById(params.id);
+    const post = await BlogDbService.getPostById(id);
 
     if (!post) {
       return NextResponse.json(
@@ -38,8 +39,9 @@ export async function GET(
 // PUT /api/blog/[id] - Update post (Admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     // Extract and verify admin token
     const authHeader = request.headers.get('authorization');
@@ -56,32 +58,32 @@ export async function PUT(
     await requireAdmin(token);
 
     const body = await request.json();
-    const updates: any = { ...body };
+    const updates: Record<string, unknown> = { ...body };
 
     // Regenerate slug if title changed
-    if (updates.title) {
+    if (updates.title && typeof updates.title === 'string') {
       updates.slug = BlogDbService.generateSlug(updates.title);
     }
 
     // Recalculate reading time if content changed
-    if (updates.content) {
+    if (updates.content && typeof updates.content === 'string') {
       updates.readingTime = BlogDbService.calculateReadingTime(updates.content);
     }
 
     // Handle publish status
-    if (updates.status) {
+    if (updates.status && typeof updates.status === 'string') {
       updates.status = updates.status.toUpperCase();
       if (updates.status === 'PUBLISHED' && !updates.publishedAt) {
         updates.publishedAt = new Date();
       }
     }
 
-    await BlogDbService.updatePost(params.id, updates);
+    await BlogDbService.updatePost(id, updates);
     return NextResponse.json({ message: 'Post updated successfully' });
   } catch (error) {
     console.error('Error updating blog post:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update blog post' },
+      { error: error instanceof Error ? error.message : 'Failed to update blog post' },
       { status: 500 }
     );
   }
@@ -90,8 +92,9 @@ export async function PUT(
 // DELETE /api/blog/[id] - Delete post (Admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     // Extract and verify admin token
     const authHeader = request.headers.get('authorization');
@@ -107,12 +110,12 @@ export async function DELETE(
     // Require admin access
     await requireAdmin(token);
 
-    await BlogDbService.deletePost(params.id);
+    await BlogDbService.deletePost(id);
     return NextResponse.json({ message: 'Post deleted successfully' });
   } catch (error) {
     console.error('Error deleting blog post:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete blog post' },
+      { error: error instanceof Error ? error.message : 'Failed to delete blog post' },
       { status: 500 }
     );
   }

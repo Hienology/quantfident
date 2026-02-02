@@ -75,9 +75,9 @@ export async function POST(request: NextRequest) {
       author: adminUser.displayName
     });
   } catch (error) {
-    console.error('Error creating blog post:', error.message);
+    console.error('Error creating blog post:', error instanceof Error ? error.message : error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create blog post' },
+      { error: error instanceof Error ? error.message : 'Failed to create blog post' },
       { status: 500 }
     );
   }

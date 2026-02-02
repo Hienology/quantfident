@@ -4,6 +4,7 @@ import { auth } from '@/lib/firebase/client';
 // Get current user's ID token
 export async function getIdToken(): Promise<string | null> {
   try {
+    if (!auth) return null;
     const user = auth.currentUser;
     if (!user) return null;
 
@@ -40,7 +41,7 @@ export async function authenticatedFetch(
 // Example usage for blog operations
 export const blogApi = {
   // Create new post
-  async createPost(postData: any) {
+  async createPost(postData: Record<string, unknown>) {
     const response = await authenticatedFetch('/api/blog', {
       method: 'POST',
       body: JSON.stringify(postData),
@@ -55,7 +56,7 @@ export const blogApi = {
   },
 
   // Update post
-  async updatePost(postId: string, updates: any) {
+  async updatePost(postId: string, updates: Record<string, unknown>) {
     const response = await authenticatedFetch(`/api/blog/${postId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),

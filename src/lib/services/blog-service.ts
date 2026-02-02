@@ -31,19 +31,24 @@ const postToFirestore = (post: Partial<BlogPost>) => ({
 });
 
 // Convert Firestore doc to BlogPost
-const docToPost = (doc: any): BlogPost => ({
-  id: doc.id,
-  ...doc.data(),
-  createdAt: timestampToDate(doc.data().createdAt),
-  updatedAt: timestampToDate(doc.data().updatedAt),
-  publishedAt: doc.data().publishedAt ? timestampToDate(doc.data().publishedAt) : undefined,
-});
+const docToPost = (doc: { id: string; data: () => Record<string, unknown> }): BlogPost => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: timestampToDate(data.createdAt as Timestamp),
+    updatedAt: timestampToDate(data.updatedAt as Timestamp),
+    publishedAt: data.publishedAt ? timestampToDate(data.publishedAt as Timestamp) : undefined,
+  } as BlogPost;
+};
 
 export class BlogService {
 
   // Get all published posts
   static async getPublishedPosts(limitCount?: number): Promise<BlogPost[]> {
     try {
+      if (!db) return [];
+
       const q = query(
         collection(db, BLOG_COLLECTION),
         where('status', '==', 'published'),
@@ -62,6 +67,7 @@ export class BlogService {
   // Get post by slug
   static async getPostBySlug(slug: string): Promise<BlogPost | null> {
     try {
+      if (!db) return null;
       const q = query(
         collection(db, BLOG_COLLECTION),
         where('slug', '==', slug),
@@ -82,6 +88,7 @@ export class BlogService {
   // Get post by ID (for admin editing)
   static async getPostById(id: string): Promise<BlogPost | null> {
     try {
+      if (!db) return null;
       const docRef = doc(db, BLOG_COLLECTION, id);
       const docSnap = await getDoc(docRef);
 
@@ -96,6 +103,7 @@ export class BlogService {
   // Create new post (admin only)
   static async createPost(postData: Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
+      if (!db) throw new Error('Database not initialized');
       const docRef = await addDoc(collection(db, BLOG_COLLECTION), postToFirestore(postData));
       return docRef.id;
     } catch (error) {
@@ -107,6 +115,7 @@ export class BlogService {
   // Update post (admin only)
   static async updatePost(id: string, updates: Partial<BlogPost>): Promise<void> {
     try {
+      if (!db) throw new Error('Database not initialized');
       const docRef = doc(db, BLOG_COLLECTION, id);
       await updateDoc(docRef, {
         ...updates,
@@ -121,6 +130,7 @@ export class BlogService {
   // Delete post (admin only)
   static async deletePost(id: string): Promise<void> {
     try {
+      if (!db) throw new Error('Database not initialized');
       const docRef = doc(db, BLOG_COLLECTION, id);
       await deleteDoc(docRef);
     } catch (error) {
@@ -132,6 +142,7 @@ export class BlogService {
   // Get all posts for admin (including drafts)
   static async getAllPostsForAdmin(): Promise<BlogPost[]> {
     try {
+      if (!db) return [];
       const q = query(
         collection(db, BLOG_COLLECTION),
         orderBy('createdAt', 'desc')

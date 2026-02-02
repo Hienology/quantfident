@@ -8,10 +8,11 @@ import type { BlogPost } from '@/types/blog';
 export async function generateMetadata({
   params
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }): Promise<Metadata> {
+  const { slug } = await params;
   try {
-    const post = await BlogDbService.getPostBySlug(params.slug);
+    const post = await BlogDbService.getPostBySlug(slug);
 
     if (!post) {
       return {
@@ -65,14 +66,15 @@ export async function generateStaticParams() {
 }
 
 interface BlogPostPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = await params;
   try {
-    const post = await BlogDbService.getPostBySlug(params.slug);
+    const post = await BlogDbService.getPostBySlug(slug);
 
     if (!post) {
       notFound();
