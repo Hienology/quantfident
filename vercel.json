@@ -1,0 +1,53 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "env": [
+    {
+      "key": "DATABASE_URL",
+      "value": "@database_url"
+    },
+    {
+      "key": "NEXT_PUBLIC_SITE_URL",
+      "value": "@next_public_site_url"
+    },
+    {
+      "key": "NEXT_PUBLIC_FIREBASE_API_KEY",
+      "value": "@firebase_api_key"
+    },
+    {
+      "key": "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+      "value": "@firebase_auth_domain"
+    },
+    {
+      "key": "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+      "value": "@firebase_project_id"
+    },
+    {
+      "key": "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
+      "value": "@firebase_storage_bucket"
+    },
+    {
+      "key": "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+      "value": "@firebase_messaging_sender_id"
+    },
+    {
+      "key": "NEXT_PUBLIC_FIREBASE_APP_ID",
+      "value": "@firebase_app_id"
+    },
+    {
+      "key": "FIREBASE_PROJECT_ID",
+      "value": "@firebase_admin_project_id"
+    },
+    {
+      "key": "FIREBASE_CLIENT_EMAIL",
+      "value": "@firebase_admin_client_email"
+    },
+    {
+      "key": "FIREBASE_PRIVATE_KEY",
+      "value": "@firebase_admin_private_key"
+    }
+  ]
+}

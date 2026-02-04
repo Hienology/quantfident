@@ -48,6 +48,12 @@ export class BlogDbService {
   // Get all published posts with pagination
   static async getPublishedPosts(limitCount?: number): Promise<BlogPost[]> {
     try {
+      // Return empty array if database is not available
+      if (!prisma) {
+        console.warn('Database not available. Returning empty posts list.');
+        return [];
+      }
+
       const posts = await prisma.blogPost.findMany({
         where: { status: 'PUBLISHED' },
         include: { author: true },
@@ -65,6 +71,12 @@ export class BlogDbService {
   // Get post by slug
   static async getPostBySlug(slug: string): Promise<BlogPost | null> {
     try {
+      // Return null if database is not available
+      if (!prisma) {
+        console.warn('Database not available. Cannot fetch post by slug.');
+        return null;
+      }
+
       const post = await prisma.blogPost.findUnique({
         where: { slug },
         include: { author: true },
@@ -81,6 +93,12 @@ export class BlogDbService {
   // Get post by ID (for admin editing)
   static async getPostById(id: string): Promise<BlogPost | null> {
     try {
+      // Return null if database is not available
+      if (!prisma) {
+        console.warn('Database not available. Cannot fetch post by ID.');
+        return null;
+      }
+
       const post = await prisma.blogPost.findUnique({
         where: { id },
         include: { author: true },
@@ -109,6 +127,11 @@ export class BlogDbService {
     publishedAt?: Date;
   }): Promise<string> {
     try {
+      // Check if database is available
+      if (!prisma) {
+        throw new Error('Database not available. Cannot create post.');
+      }
+
       const post = await prisma.blogPost.create({
         data: {
           title: postData.title,
@@ -150,6 +173,10 @@ export class BlogDbService {
     likes: number;
   }>): Promise<void> {
     try {
+      if (!prisma) {
+        throw new Error('Database not available. Cannot update post.');
+      }
+
       await prisma.blogPost.update({
         where: { id },
         data: updates,
@@ -163,6 +190,10 @@ export class BlogDbService {
   // Delete post
   static async deletePost(id: string): Promise<void> {
     try {
+      if (!prisma) {
+        throw new Error('Database not available. Cannot delete post.');
+      }
+
       await prisma.blogPost.delete({
         where: { id },
       });
@@ -175,6 +206,11 @@ export class BlogDbService {
   // Get all posts for admin (including drafts)
   static async getAllPostsForAdmin(): Promise<BlogPost[]> {
     try {
+      if (!prisma) {
+        console.warn('Database not available. Returning empty posts list.');
+        return [];
+      }
+
       const posts = await prisma.blogPost.findMany({
         include: { author: true },
         orderBy: { createdAt: 'desc' },
@@ -205,6 +241,11 @@ export class BlogDbService {
   // Increment view count
   static async incrementViews(id: string): Promise<void> {
     try {
+      if (!prisma) {
+        console.warn('Database not available. Cannot increment views.');
+        return;
+      }
+
       await prisma.blogPost.update({
         where: { id },
         data: { views: { increment: 1 } },
@@ -223,6 +264,11 @@ export class BlogDbService {
     photoURL?: string;
   }): Promise<void> {
     try {
+      if (!prisma) {
+        console.warn('Database not available. Cannot upsert user.');
+        return;
+      }
+
       await prisma.user.upsert({
         where: { firebaseUid: userData.firebaseUid },
         update: {
@@ -253,6 +299,11 @@ export class BlogDbService {
   // Get user by Firebase UID
   static async getUserByFirebaseUid(firebaseUid: string) {
     try {
+      if (!prisma) {
+        console.warn('Database not available. Cannot fetch user.');
+        return null;
+      }
+
       return await prisma.user.findUnique({
         where: { firebaseUid },
       });
@@ -265,6 +316,11 @@ export class BlogDbService {
   // Grant admin role (only if email matches)
   static async grantAdminRole(firebaseUid: string, adminEmail: string): Promise<void> {
     try {
+      if (!prisma) {
+        console.warn('Database not available. Cannot grant admin role.');
+        return;
+      }
+
       const user = await this.getUserByFirebaseUid(firebaseUid);
       if (user && user.email.toLowerCase() === adminEmail.toLowerCase() && user.emailVerified) {
         await prisma.user.update({
