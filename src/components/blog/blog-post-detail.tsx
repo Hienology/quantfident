@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, Clock, User, ArrowLeft, Share2, Heart } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { BlogPost } from '@/types/blog';
 
 interface BlogPostDetailProps {
@@ -99,11 +100,13 @@ export function BlogPostDetail({ post }: BlogPostDetailProps) {
 
         {/* Featured Image */}
         {post.featuredImage && (
-          <div className="mb-8 rounded-lg overflow-hidden">
-            <img
+          <div className="mb-8 rounded-lg overflow-hidden relative h-64 md:h-96 w-full">
+            <Image
               src={post.featuredImage}
               alt={post.title}
-              className="w-full h-64 md:h-96 object-cover"
+              fill
+              className="object-cover"
+              priority
             />
           </div>
         )}

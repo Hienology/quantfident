@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Section } from "./section";
 import { BlogDbService } from '@/lib/services/blog-db-service';
 import { Calendar, Clock, User, ArrowRight, Search } from 'lucide-react';
-import type { BlogPost, BlogCategory } from '@/types/blog';
+import type { BlogPost } from '@/types/blog';
 import { BLOG_CATEGORIES } from '@/types/blog';
 
 export function Blog() {
@@ -126,10 +127,11 @@ export function Blog() {
             {paginatedPosts.map((post) => (
               <Card key={post.id} className="group hover:shadow-lg transition-shadow duration-300">
                 {post.featuredImage && (
-                  <div className="aspect-video overflow-hidden rounded-t-lg">
-                    <img
+                  <div className="aspect-video overflow-hidden rounded-t-lg relative">
+                    <Image
                       src={post.featuredImage}
                       alt={post.title}
+                      fill
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
