@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BlogDbService } from '@/lib/services/blog-db-service';
 import { requireAdmin, extractTokenFromHeader } from '@/lib/auth/server-auth';
+import { blogLimiter, getUserIdentifier } from '@/lib/middleware/rate-limit';
 
 // GET /api/blog - Get published posts
 export async function GET(request: NextRequest) {
@@ -35,6 +36,26 @@ export async function POST(request: NextRequest) {
 
     // Require admin access
     const adminUser = await requireAdmin(token);
+
+    // Check rate limit per admin user
+    const userIdentifier = getUserIdentifier(request.headers, adminUser.uid);
+    const rateLimitResult = blogLimiter.check(userIdentifier);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter),
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          },
+        }
+      );
+    }
 
     const body = await request.json();
     const {
