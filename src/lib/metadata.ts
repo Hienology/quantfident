@@ -47,7 +47,10 @@ export const siteMetadata: Metadata = {
     images: ["/opengraph-image"],
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/quantfident_logo_transparent_cropped.png", type: "image/png" },
+    ],
+    apple: "/quantfident_logo_transparent_cropped.png",
   },
   robots: {
     index: true,
