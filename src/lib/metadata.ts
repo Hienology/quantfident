@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://quantfident.vercel.app";
+const baseUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://quantfident.vercel.app";
 
 export const siteMetadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -40,9 +41,7 @@ export const siteMetadata: Metadata = {
     type: "website",
   },
   icons: {
-    icon: [
-      { url: "/official_transparent_icon.png", type: "image/png" },
-    ],
+    icon: [{ url: "/official_transparent_icon.png", type: "image/png" }],
     apple: "/official_transparent_icon.png",
   },
   robots: {
@@ -53,4 +52,3 @@ export const siteMetadata: Metadata = {
     canonical: baseUrl,
   },
 };
-
