@@ -1,0 +1,2 @@
+# Encrypt private docs with git-crypt
+/docs/private/** filter=git-crypt diff=git-crypt

@@ -40,9 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Private documentation (architecture & implementation details - security)
-docs/private/
-
 # Local database schema file
 database-schema.sql
 
