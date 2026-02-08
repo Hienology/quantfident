@@ -41,9 +41,9 @@ export const siteMetadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/transparent_icon.png", type: "image/png" },
+      { url: "/official_transparent_icon.png", type: "image/png" },
     ],
-    apple: "/transparent_icon.png",
+    apple: "/official_transparent_icon.png",
   },
   robots: {
     index: true,
