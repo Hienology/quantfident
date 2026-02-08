@@ -39,18 +39,11 @@ export const siteMetadata: Metadata = {
     locale: "vi_VN",
     type: "website",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "QuantFident Mentorship",
-    description:
-      "Break into Quant với lộ trình theory-to-alpha và unlimited mock interviews.",
-    images: ["/opengraph-image"],
-  },
   icons: {
     icon: [
-      { url: "/quantfident_logo_transparent_cropped.png", type: "image/png" },
+      { url: "/transparent_icon.png", type: "image/png" },
     ],
-    apple: "/quantfident_logo_transparent_cropped.png",
+    apple: "/transparent_icon.png",
   },
   robots: {
     index: true,
