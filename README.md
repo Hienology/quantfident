@@ -20,6 +20,8 @@ Dev server: `http://localhost:3000`
 
 ### Environment
 - `NEXT_PUBLIC_SITE_URL` (optional): canonical URL, used in metadata/sitemap/robots
+- `ADMIN_EMAIL` (server-only): the *only* account that can be promoted to admin role.
+- `NEXT_PUBLIC_CONTACT_EMAIL` (client-visible): public contact mailbox shown in CTA. This is intentionally separate from `ADMIN_EMAIL`.
 
 ### Deploy (Vercel)
 1. Push to GitHub

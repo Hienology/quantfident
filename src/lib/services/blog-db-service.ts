@@ -313,7 +313,8 @@ export class BlogDbService {
     }
   }
 
-  // Grant admin role (only if email matches)
+  // Grant admin role to the configured admin email only.
+  // We enforce a single-admin model by demoting any existing admins first.
   static async grantAdminRole(firebaseUid: string, adminEmail: string): Promise<void> {
     try {
       if (!prisma) {
@@ -322,12 +323,23 @@ export class BlogDbService {
       }
 
       const user = await this.getUserByFirebaseUid(firebaseUid);
-      if (user && user.email.toLowerCase() === adminEmail.toLowerCase() && user.emailVerified) {
-        await prisma.user.update({
+      if (!user || user.email.toLowerCase() !== adminEmail.toLowerCase() || !user.emailVerified) {
+        return;
+      }
+
+      await prisma.$transaction([
+        prisma.user.updateMany({
+          where: {
+            role: 'ADMIN',
+            firebaseUid: { not: firebaseUid },
+          },
+          data: { role: 'USER' },
+        }),
+        prisma.user.update({
           where: { firebaseUid },
           data: { role: 'ADMIN' },
-        });
-      }
+        }),
+      ]);
     } catch (error) {
       console.error('Error granting admin role:', error);
       throw error;

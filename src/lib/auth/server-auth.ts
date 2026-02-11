@@ -4,6 +4,10 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { BlogDbService } from '@/lib/services/blog-db-service';
+import { getAdminEmail } from '@/lib/admin/verification';
+
+export const SESSION_COOKIE_NAME = 'quantfident_session';
+export const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 5; // 5 days
 
 let adminAuth: ReturnType<typeof getAuth> | null = null;
 
@@ -59,7 +63,7 @@ export async function verifyIdToken(token: string, checkRevoked: boolean = false
     const userData = await BlogDbService.getUserByFirebaseUid(decodedToken.uid);
 
     // Check if user should be admin (only if email matches and verified)
-    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminEmail = getAdminEmail();
     if (adminEmail &&
         decodedToken.email?.toLowerCase() === adminEmail.toLowerCase() &&
         decodedToken.email_verified &&
@@ -100,6 +104,60 @@ export async function verifyIdToken(token: string, checkRevoked: boolean = false
     console.error('Token verification failed:', error);
     return null;
   }
+}
+
+// Verify Firebase session cookie and resolve user profile from DB
+export async function verifySessionCookie(sessionCookie: string, checkRevoked: boolean = true): Promise<AuthenticatedUser | null> {
+  try {
+    const decodedToken = await getAdminAuth().verifySessionCookie(sessionCookie, checkRevoked);
+
+    await BlogDbService.upsertUser({
+      firebaseUid: decodedToken.uid,
+      email: decodedToken.email || '',
+      emailVerified: decodedToken.email_verified || false,
+      displayName: decodedToken.name,
+      photoURL: decodedToken.picture,
+    });
+
+    const userData = await BlogDbService.getUserByFirebaseUid(decodedToken.uid);
+
+    const adminEmail = getAdminEmail();
+    if (
+      adminEmail &&
+      decodedToken.email?.toLowerCase() === adminEmail.toLowerCase() &&
+      decodedToken.email_verified &&
+      userData?.role !== 'ADMIN'
+    ) {
+      await BlogDbService.grantAdminRole(decodedToken.uid, adminEmail);
+    }
+
+    const resolvedUser = await BlogDbService.getUserByFirebaseUid(decodedToken.uid);
+    if (!resolvedUser) {
+      return null;
+    }
+
+    return {
+      uid: resolvedUser.id,
+      email: resolvedUser.email,
+      emailVerified: resolvedUser.emailVerified,
+      displayName: resolvedUser.displayName ?? undefined,
+      photoURL: resolvedUser.photoURL ?? undefined,
+      role: resolvedUser.role.toLowerCase() as 'user' | 'admin',
+      createdAt: resolvedUser.createdAt,
+      lastLoginAt: resolvedUser.lastLoginAt || new Date(),
+    };
+  } catch (error) {
+    console.error('Session cookie verification failed:', error);
+    return null;
+  }
+}
+
+export async function createSessionCookieFromIdToken(idToken: string): Promise<string> {
+  return getAdminAuth().createSessionCookie(idToken, { expiresIn: SESSION_MAX_AGE_MS });
+}
+
+export async function revokeUserSessions(uid: string): Promise<void> {
+  await getAdminAuth().revokeRefreshTokens(uid);
 }
 
 // Require admin access for protected routes
