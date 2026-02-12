@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BlogDbService } from '@/lib/services/blog-db-service';
 import { requireAdmin, extractTokenFromHeader } from '@/lib/auth/server-auth';
 import { blogLimiter, getUserIdentifier } from '@/lib/middleware/rate-limit';
+import { recordPostVersion } from '@/lib/supabase/post-versions';
 
 // GET /api/blog/[id] - Get specific post (for admin editing)
 export async function GET(
@@ -81,6 +82,14 @@ export async function PUT(
     const body = await request.json();
     const updates: Record<string, unknown> = { ...body };
 
+    const currentPost = await BlogDbService.getPostById(id);
+    if (!currentPost) {
+      return NextResponse.json(
+        { error: 'Post not found' },
+        { status: 404 }
+      );
+    }
+
     // Regenerate slug if title changed
     if (updates.title && typeof updates.title === 'string') {
       updates.slug = BlogDbService.generateSlug(updates.title);
@@ -97,6 +106,22 @@ export async function PUT(
       if (updates.status === 'PUBLISHED' && !updates.publishedAt) {
         updates.publishedAt = new Date();
       }
+    }
+
+    try {
+      await recordPostVersion({
+        postId: currentPost.id,
+        editorId: adminUser.uid,
+        title: currentPost.title,
+        content: currentPost.content,
+        excerpt: currentPost.excerpt,
+      });
+    } catch (versionError) {
+      console.error('Error recording post version:', versionError);
+      return NextResponse.json(
+        { error: 'Failed to record post version' },
+        { status: 500 }
+      );
     }
 
     await BlogDbService.updatePost(id, updates);

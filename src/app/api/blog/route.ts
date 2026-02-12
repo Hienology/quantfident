@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BlogDbService } from '@/lib/services/blog-db-service';
 import { requireAdmin, extractTokenFromHeader } from '@/lib/auth/server-auth';
 import { blogLimiter, getUserIdentifier } from '@/lib/middleware/rate-limit';
+import { recordPostVersion } from '@/lib/supabase/post-versions';
 
 // GET /api/blog - Get published posts
 export async function GET(request: NextRequest) {
@@ -90,6 +91,24 @@ export async function POST(request: NextRequest) {
     };
 
     const postId = await BlogDbService.createPost(postData);
+
+    try {
+      await recordPostVersion({
+        postId,
+        editorId: adminUser.uid,
+        title: postData.title,
+        content: postData.content,
+        excerpt: postData.excerpt,
+      });
+    } catch (versionError) {
+      console.error('Error recording post version:', versionError);
+      await BlogDbService.deletePost(postId);
+      return NextResponse.json(
+        { error: 'Failed to record post version' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       postId,
       message: 'Post created successfully',
