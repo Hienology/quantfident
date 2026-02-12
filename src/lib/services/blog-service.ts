@@ -14,7 +14,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
-import type { BlogPost, BlogPostForm, BlogCategory } from '@/types/blog';
+import type { BlogPost } from '@/types/blog';
 
 // Collection reference
 const BLOG_COLLECTION = 'blog_posts';

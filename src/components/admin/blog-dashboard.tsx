@@ -22,8 +22,7 @@ import {
   Eye,
   Archive,
   FileText,
-  Calendar,
-  User
+  Calendar
 } from 'lucide-react';
 import { BlogService } from '@/lib/services/blog-service';
 import { BlogEditor } from './blog-editor';

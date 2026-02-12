@@ -41,7 +41,7 @@ export function EmailVerify() {
           setStatus('error');
           setMessage(result.error || 'Đăng nhập thất bại');
         }
-      } catch (error) {
+      } catch {
         setStatus('error');
         setMessage('Đã xảy ra lỗi khi xác thực');
       }

@@ -1,7 +1,6 @@
 // Blog service using Prisma + Postgres instead of Firestore
 import { prisma } from '@/lib/db/prisma';
-import type { BlogPost, BlogPostForm, BlogCategory } from '@/types/blog';
-import { BLOG_CATEGORIES } from '@/types/blog';
+import type { BlogPost } from '@/types/blog';
 
 // Convert Prisma BlogPost to our BlogPost type
 const prismaToBlogPost = (post: {

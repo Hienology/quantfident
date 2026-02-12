@@ -2,10 +2,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, Clock, User, ArrowLeft, Share2, Heart } from 'lucide-react';
+import { Calendar, Clock, User, ArrowLeft, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { BlogPost } from '@/types/blog';
+import { LikeButton } from './like-button';
 
 interface BlogPostDetailProps {
   post: BlogPost;
@@ -20,7 +21,7 @@ export function BlogPostDetail({ post }: BlogPostDetailProps) {
           text: post.excerpt,
           url: window.location.href,
         });
-      } catch (error) {
+      } catch {
         // Fallback to clipboard
         await navigator.clipboard.writeText(window.location.href);
         alert('Link copied to clipboard!');
@@ -131,10 +132,7 @@ export function BlogPostDetail({ post }: BlogPostDetailProps) {
             Share
           </Button>
 
-          <Button variant="outline" className="flex items-center gap-2">
-            <Heart className="w-4 h-4" />
-            Like ({post.likes})
-          </Button>
+          <LikeButton postId={post.id} initialLikes={post.likes} />
         </div>
 
         <div className="text-sm text-muted-foreground">

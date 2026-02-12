@@ -22,6 +22,9 @@ Dev server: `http://localhost:3000`
 - `NEXT_PUBLIC_SITE_URL` (optional): canonical URL, used in metadata/sitemap/robots
 - `ADMIN_EMAIL` (server-only): the *only* account that can be promoted to admin role.
 - `NEXT_PUBLIC_CONTACT_EMAIL` (client-visible): public contact mailbox shown in CTA. This is intentionally separate from `ADMIN_EMAIL`.
+- `NEXT_PUBLIC_SUPABASE_URL` (client/server): Supabase project URL.
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (client): public Supabase key for read/write.
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only): privileged key for server-side operations.
 
 ### Deploy (Vercel)
 1. Push to GitHub

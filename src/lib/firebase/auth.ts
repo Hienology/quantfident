@@ -3,6 +3,8 @@
 export type { AuthResult } from './google-auth';
 export { signInWithGoogle } from './google-auth';
 
+export { completeSignInWithEmailLink } from './email-link-auth';
+
 export type { SessionResult, UserProfile, SignOutResult } from './session-auth';
 export {
   createServerSession,

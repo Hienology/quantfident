@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { BlogDbService } from '@/lib/services/blog-db-service';
 import { BlogPostDetail } from '@/components/blog/blog-post-detail';
-import type { BlogPost } from '@/types/blog';
 
 // Generate metadata for SEO
 export async function generateMetadata({
@@ -45,7 +44,7 @@ export async function generateMetadata({
         images: post.featuredImage ? [post.featuredImage] : [],
       },
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Error Loading Post',
     };

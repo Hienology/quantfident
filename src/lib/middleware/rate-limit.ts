@@ -73,6 +73,7 @@ class RateLimiter {
 // Create instances for different rate limit configs
 export const authLimiter = new RateLimiter(15 * 60 * 1000, 10); // 10 requests per 15 minutes per IP
 export const blogLimiter = new RateLimiter(60 * 1000, 5); // 5 requests per minute per admin
+export const likesLimiter = new RateLimiter(60 * 1000, 20); // 20 requests per minute per user
 
 /**
  * Get client identifier from request (IP address)
