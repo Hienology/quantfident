@@ -1,17 +1,37 @@
--- Row Level Security policies
--- NOTE: These assume Supabase Auth. If you use Firebase-only auth for client writes,
--- rely on server-side service role calls and keep strict RLS for public access.
+-- Migration: Fix RLS policy performance warnings
+-- Addresses: auth_rls_initplan and multiple_permissive_policies linter warnings
+-- 
+-- Changes:
+-- 1. Wrap auth.uid() and auth.role() in (select ...) to avoid per-row re-evaluation
+-- 2. Replace profiles_modify_own (for all) with separate INSERT/UPDATE/DELETE policies
+--    to avoid multiple permissive SELECT policies overlap
 --
--- PERFORMANCE: All auth function calls use (select auth.<fn>()) pattern to avoid
--- per-row re-evaluation. See: https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select
+-- Run this on existing Supabase instances that applied 002_rls_policies.sql
 
-alter table public.profiles enable row level security;
-alter table public.likes enable row level security;
-alter table public.comments enable row level security;
-alter table public.post_versions enable row level security;
+-- Drop existing policies first
+drop policy if exists "profiles_modify_own" on public.profiles;
+drop policy if exists "profiles_select_public" on public.profiles;
+drop policy if exists "profiles_insert_own" on public.profiles;
+drop policy if exists "profiles_update_own" on public.profiles;
+drop policy if exists "profiles_delete_own" on public.profiles;
 
--- Profiles: Public read, owner-only write
--- Split into separate policies to avoid multiple permissive SELECT policies
+drop policy if exists "likes_select_public" on public.likes;
+drop policy if exists "likes_insert_own" on public.likes;
+drop policy if exists "likes_delete_own" on public.likes;
+
+drop policy if exists "comments_select_public" on public.comments;
+drop policy if exists "comments_insert_own" on public.comments;
+drop policy if exists "comments_update_own" on public.comments;
+drop policy if exists "comments_delete_own" on public.comments;
+
+drop policy if exists "post_versions_select_admin" on public.post_versions;
+drop policy if exists "post_versions_insert_admin" on public.post_versions;
+drop policy if exists "post_versions_update_admin" on public.post_versions;
+drop policy if exists "post_versions_delete_admin" on public.post_versions;
+
+-- Recreate policies with (select auth.<fn>()) pattern for performance
+
+-- Profiles: Public read, owner-only write (separate policies to avoid overlap)
 create policy "profiles_select_public"
   on public.profiles for select
   using (true);
@@ -60,7 +80,7 @@ create policy "comments_delete_own"
   on public.comments for delete
   using ((select auth.uid())::text = user_id);
 
--- Post versions (admin/server only; keep RLS strict)
+-- Post versions (admin/server only)
 create policy "post_versions_select_admin"
   on public.post_versions for select
   using ((select auth.role()) = 'service_role');
