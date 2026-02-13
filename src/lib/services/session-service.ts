@@ -1,5 +1,6 @@
 // Session management service using Prisma + Postgres
 import { prisma } from '@/lib/db/prisma';
+import type { Prisma } from '@prisma/client';
 
 /**
  * Generate a random session ID
@@ -174,7 +175,7 @@ export class SessionService {
         data: {
           userId: session.userId,
           sessionId,
-          contextData,
+          contextData: contextData as Prisma.InputJsonValue,
         },
       });
     } else {
@@ -185,7 +186,7 @@ export class SessionService {
       context = await prisma.sessionContext.update({
         where: { id: context.id },
         data: {
-          contextData: mergedData,
+          contextData: mergedData as Prisma.InputJsonValue,
         },
       });
     }
@@ -225,7 +226,7 @@ export class SessionService {
       data: {
         userId,
         sessionId: sessionId || undefined,
-        snapshotData,
+        snapshotData: snapshotData as Prisma.InputJsonValue,
         snapshotName,
         isManual: !!snapshotName, // Manual if user provided a name
         source: snapshotName ? 'manual' : 'auto',
@@ -306,7 +307,7 @@ export class SessionService {
         data: {
           userId,
           sessionId,
-          contextData: defaultData,
+          contextData: defaultData as Prisma.InputJsonValue,
         },
       });
     }

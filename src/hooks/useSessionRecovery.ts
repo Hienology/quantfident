@@ -59,7 +59,7 @@ export function useSessionRecovery(options: UseSessionRecoveryOptions = {}) {
   const [snapshots, setSnapshots] = useState<SessionSnapshot[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const autoSaveTimerRef = useRef<NodeJS.Timeout>();
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const unsubscribeStorageRef = useRef<(() => void) | null>(null);
 
   /**
@@ -177,6 +177,7 @@ export function useSessionRecovery(options: UseSessionRecoveryOptions = {}) {
         setIsSyncing(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [sessionId, contextData]
   );
 

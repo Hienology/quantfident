@@ -287,7 +287,7 @@ export async function restoreSnapshotServer(
  */
 export async function listSnapshotsServer(
   limit: number = 10
-): Promise<Array<{ id: string; snapshotName: string; createdAt: string }> | null> {
+): Promise<Array<{ id: string; snapshotName: string; createdAt: string; source: string }> | null> {
   try {
     const response = await fetch(`/api/sessions/snapshots?limit=${limit}`, {
       method: 'GET',
@@ -367,7 +367,7 @@ export function broadcastSessionUpdate(
       timestamp: Date.now(),
     });
     channel.close();
-  } catch (error) {
+  } catch {
     // Fallback to localStorage events
     localStorage.setItem(
       `${STORAGE_KEY}_broadcast_${Date.now()}`,

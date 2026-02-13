@@ -82,7 +82,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      snapshots: snapshots.map(snapshot => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      snapshots: snapshots.map((snapshot: any) => ({
         id: snapshot.id,
         snapshotName: snapshot.snapshotName,
         source: snapshot.source,

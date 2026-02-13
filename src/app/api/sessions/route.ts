@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      sessions: sessions.map(session => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sessions: sessions.map((session: any) => ({
         id: session.id,
         sessionId: session.sessionId,
         deviceName: session.deviceName,
