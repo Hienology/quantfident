@@ -10,7 +10,7 @@ Apply the SQL migrations in order and then configure the env variables.
 
 ## Env Vars (Vercel)
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 See the environment matrix in [docs/public/ENVIRONMENT.md](ENVIRONMENT.md) for Local/Preview/Prod guidance.
