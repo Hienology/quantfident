@@ -24,6 +24,9 @@ model User {
 
   // Relations
   posts           BlogPost[] @relation("AuthorPosts")
+  sessions        UserSession[] @relation("UserSessions")
+  sessionContexts SessionContext[] @relation("UserSessionContexts")
+  sessionSnapshots SessionSnapshot[] @relation("UserSessionSnapshots")
 
   @@map("users")
 }
@@ -75,6 +78,81 @@ model Comment {
   post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@map("comments")
+}
+
+// User Sessions - tracks active and past sessions
+model UserSession {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Session metadata
+  sessionId     String   @unique // Browser/device session ID
+  deviceName    String?  // e.g., "Chrome on Windows"
+  deviceType    String?  // "desktop", "mobile", "tablet"
+  ipAddress     String?
+  userAgent     String?
+  
+  // Session state
+  isActive      Boolean  @default(true)
+  lastActivityAt DateTime @default(now()) @updatedAt
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime
+  
+  // Session context (UI state, preferences, etc.)
+  context       SessionContext? @relation("SessionToContext")
+  snapshots     SessionSnapshot[] @relation("SessionSnapshots")
+  
+  @@index([userId])
+  @@index([sessionId])
+  @@map("user_sessions")
+}
+
+// Session context - stores UI state, preferences, and application state
+model SessionContext {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation("UserSessionContexts", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Link to current session
+  sessionId     String   @unique
+  session       UserSession @relation("SessionToContext", fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Context data stored as JSON
+  contextData   Json     @default("{}")
+  
+  // Metadata
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  
+  @@index([userId])
+  @@map("session_contexts")
+}
+
+// Session snapshots - for session recovery and history
+model SessionSnapshot {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation("UserSessionSnapshots", fields: [userId], references: [id], onDelete: Cascade)
+  
+  sessionId     String?
+  session       UserSession? @relation("SessionSnapshots", fields: [sessionId], references: [id], onDelete: SetNull)
+  
+  // Snapshot data
+  snapshotData  Json     @default("{}")
+  snapshotName  String?  // Optional user-defined name
+  
+  // Timestamp tracking
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime @default(dbgenerated("now() + interval '30 days'"))
+  
+  // Metadata
+  isManual      Boolean  @default(false) // User manually created snapshot
+  source        String   @default("auto") // "auto", "manual", "scheduled"
+  
+  @@index([userId])
+  @@index([sessionId])
+  @@map("session_snapshots")
 }
 
 // Enums
