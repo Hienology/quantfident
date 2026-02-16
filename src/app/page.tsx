@@ -11,6 +11,7 @@ import { QuantCareers } from "@/components/sections/quant-careers";
 import { IndustryInsights } from "@/components/sections/industry-insights";
 import { SkillsMatrix } from "@/components/sections/skills-matrix";
 import { InterviewPrep } from "@/components/sections/interview-prep";
+import { ContactForm } from "@/components/sections/contact-form";
 
 export default function Home() {
   return (
@@ -40,8 +41,9 @@ export default function Home() {
         <Blog />
       </div>
       <div id="contact">
-        <CTASection />
+        <ContactForm />
       </div>
+      <CTASection />
     </div>
   );
 }

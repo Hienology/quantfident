@@ -38,7 +38,11 @@ class RateLimiter {
    * @param identifier Unique identifier (IP address, user ID, etc)
    * @returns Object with allowed status and remaining requests
    */
-  check(identifier: string): { allowed: boolean; remaining: number; retryAfter?: number } {
+  check(identifier: string): {
+    allowed: boolean;
+    remaining: number;
+    retryAfter?: number;
+  } {
     const now = Date.now();
 
     // Get or create entry list for this identifier
@@ -49,7 +53,9 @@ class RateLimiter {
 
     // Count allowed requests (within window)
     const windowStart = now - this.windowMs;
-    const requestsInWindow = entries.filter((entry) => entry.resetTime - this.windowMs > windowStart);
+    const requestsInWindow = entries.filter(
+      (entry) => entry.resetTime - this.windowMs > windowStart,
+    );
 
     const allowed = requestsInWindow.length < this.maxRequests;
     const remaining = Math.max(0, this.maxRequests - requestsInWindow.length);
@@ -74,25 +80,27 @@ class RateLimiter {
 export const authLimiter = new RateLimiter(15 * 60 * 1000, 10); // 10 requests per 15 minutes per IP
 export const blogLimiter = new RateLimiter(60 * 1000, 5); // 5 requests per minute per admin
 export const likesLimiter = new RateLimiter(60 * 1000, 20); // 20 requests per minute per user
+export const contactLimiter = new RateLimiter(10 * 60 * 1000, 6); // 6 submissions per 10 min per IP
+export const contactEmailLimiter = new RateLimiter(60 * 60 * 1000, 3); // 3 submissions per hour per email
 
 /**
  * Get client identifier from request (IP address)
  */
 export function getClientIdentifier(headers: Headers): string {
   // Try to get real IP from headers (in order of preference)
-  const xForwardedFor = headers.get('x-forwarded-for');
+  const xForwardedFor = headers.get("x-forwarded-for");
   if (xForwardedFor) {
     // x-forwarded-for can contain multiple IPs, get the first one
-    return xForwardedFor.split(',')[0].trim();
+    return xForwardedFor.split(",")[0].trim();
   }
 
-  const xRealIp = headers.get('x-real-ip');
+  const xRealIp = headers.get("x-real-ip");
   if (xRealIp) {
     return xRealIp;
   }
 
   // Fallback to unknown
-  return 'unknown';
+  return "unknown";
 }
 
 /**
