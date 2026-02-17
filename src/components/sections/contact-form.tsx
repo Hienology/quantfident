@@ -63,6 +63,12 @@ export function ContactForm() {
   const [universities, setUniversities] = useState<University[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSchoolMatched, setIsSchoolMatched] = useState(false);
+  
+  // Pagination state for university list
+  const [uniOffset, setUniOffset] = useState(0);
+  const [uniTotal, setUniTotal] = useState(0);
+  const PAGE_SIZE = 10;
+  const MIN_CHARS = 2;
 
   // Year dropdown options (2020-2032)
   const yearOptions = Array.from({ length: 13 }, (_, i) => 2020 + i);
@@ -71,20 +77,23 @@ export function ContactForm() {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Search universities as user types
-  const searchUniversities = useCallback(async (query: string) => {
-    if (query.length < 2) {
+  const searchUniversities = useCallback(async (query: string, offset: number = 0) => {
+    if (query.length < MIN_CHARS) {
       setUniversities([]);
+      setUniTotal(0);
       return;
     }
 
     setIsSearching(true);
     try {
       const res = await fetch(
-        `/api/universities?q=${encodeURIComponent(query)}`,
+        `/api/universities?q=${encodeURIComponent(query)}&offset=${offset}&limit=${PAGE_SIZE}`,
       );
       if (res.ok) {
         const data = await res.json();
         setUniversities(data.universities || []);
+        setUniTotal(data.total || 0);
+        setUniOffset(offset);
       }
     } catch (error) {
       console.error("University search failed:", error);
@@ -93,18 +102,21 @@ export function ContactForm() {
     }
   }, []);
 
-  // Debounced search
+  // Debounced search - fast real-time matching
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    if (schoolSearch.length >= 2) {
+    if (schoolSearch.length >= MIN_CHARS) {
+      // Reset pagination when search query changes
+      setUniOffset(0);
       searchTimeoutRef.current = setTimeout(() => {
-        searchUniversities(schoolSearch);
-      }, 300);
+        searchUniversities(schoolSearch, 0);
+      }, 150); // Fast 150ms debounce for real-time feel
     } else {
       setUniversities([]);
+      setUniTotal(0);
     }
 
     return () => {
@@ -113,6 +125,19 @@ export function ContactForm() {
       }
     };
   }, [schoolSearch, searchUniversities]);
+
+  // Pagination handlers
+  const handlePrevPage = () => {
+    if (uniOffset > 0) {
+      searchUniversities(schoolSearch, Math.max(0, uniOffset - PAGE_SIZE));
+    }
+  };
+
+  const handleNextPage = () => {
+    if (uniOffset + PAGE_SIZE < uniTotal) {
+      searchUniversities(schoolSearch, uniOffset + PAGE_SIZE);
+    }
+  };
 
   // Check client-side throttle
   function isThrottled(): boolean {
@@ -405,7 +430,7 @@ export function ContactForm() {
                           </div>
                         )}
                         {!isSearching &&
-                          schoolSearch.length >= 2 &&
+                          schoolSearch.length >= MIN_CHARS &&
                           universities.length === 0 && (
                             <CommandEmpty>
                               No schools found. You can type your school name
@@ -413,30 +438,80 @@ export function ContactForm() {
                             </CommandEmpty>
                           )}
                         {!isSearching && universities.length > 0 && (
-                          <CommandGroup>
-                            {universities.map((uni) => (
-                              <CommandItem
-                                key={uni.id}
-                                value={uni.name}
-                                onSelect={() => {
-                                  setSchoolValue(uni.name);
-                                  setIsSchoolMatched(true);
-                                  setSchoolOpen(false);
-                                  setSchoolSearch("");
-                                }}
+                          <>
+                            {/* Pagination: Previous button */}
+                            {uniOffset > 0 && (
+                              <button
+                                type="button"
+                                onClick={handlePrevPage}
+                                className="w-full py-2 px-3 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground border-b"
                               >
-                                <span>{uni.name}</span>
-                                {uni.state && (
-                                  <span className="ml-2 text-xs text-muted-foreground">
-                                    {uni.state}
-                                  </span>
-                                )}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                                <svg
+                                  className="h-4 w-4"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="m18 15-6-6-6 6"/>
+                                </svg>
+                                Previous {PAGE_SIZE}
+                              </button>
+                            )}
+                            <CommandGroup>
+                              {universities.map((uni) => (
+                                <CommandItem
+                                  key={uni.id}
+                                  value={uni.name}
+                                  onSelect={() => {
+                                    setSchoolValue(uni.name);
+                                    setIsSchoolMatched(true);
+                                    setSchoolOpen(false);
+                                    setSchoolSearch("");
+                                  }}
+                                >
+                                  <span>{uni.name}</span>
+                                  {uni.state && (
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                      {uni.state}
+                                    </span>
+                                  )}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                            {/* Pagination: Next button */}
+                            {uniOffset + PAGE_SIZE < uniTotal && (
+                              <button
+                                type="button"
+                                onClick={handleNextPage}
+                                className="w-full py-2 px-3 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground border-t"
+                              >
+                                Next {PAGE_SIZE}
+                                <svg
+                                  className="h-4 w-4"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="m6 9 6 6 6-6"/>
+                                </svg>
+                              </button>
+                            )}
+                            {/* Show result count */}
+                            <div className="px-3 py-1.5 text-xs text-muted-foreground text-center border-t">
+                              Showing {uniOffset + 1}-{Math.min(uniOffset + universities.length, uniTotal)} of {uniTotal}
+                            </div>
+                          </>
                         )}
                         {/* Allow custom entry */}
-                        {schoolSearch.length >= 2 &&
+                        {schoolSearch.length >= MIN_CHARS &&
                           !universities.find(
                             (u) =>
                               u.name.toLowerCase() ===
