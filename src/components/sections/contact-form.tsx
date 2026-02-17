@@ -241,7 +241,7 @@ export function ContactForm() {
   if (isSuccess) {
     return (
       <Section>
-      <Card>
+        <Card>
           <CardContent className="py-12 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <svg

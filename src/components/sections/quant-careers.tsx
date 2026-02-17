@@ -32,21 +32,21 @@ export function QuantCareers() {
           const Icon = career.icon;
           return (
             <FadeIn key={career.title} delay={i * 0.1}>
-              <Card className="rounded-3xl shadow-xl h-full border-0 bg-gradient-to-br from-background via-background to-primary/5 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 shadow-lg">
-                      <Icon className="h-6 w-6 text-primary" />
+              <Card className="rounded-2xl shadow-md h-full bg-primary text-primary-foreground">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 rounded-lg bg-primary-foreground/10">
+                      <Icon className="h-4 w-4 text-primary-foreground" />
                     </div>
-                    <CardTitle className="text-xl font-serif">{career.title}</CardTitle>
                   </div>
+                  <CardTitle className="text-sm leading-tight text-primary-foreground">{career.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">{career.description}</p>
+                <CardContent className="space-y-3 pt-0">
+                  <p className="text-xs text-primary-foreground/80 leading-relaxed">{career.description}</p>
                   <div>
-                    <div className="text-sm font-medium mb-2">Kỹ năng chính:</div>
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      {career.skills.map(skill => (
+                    <div className="text-xs font-medium mb-1 text-primary-foreground">Kỹ năng chính:</div>
+                    <ul className="text-xs text-primary-foreground/80 space-y-0.5">
+                      {career.skills.slice(0, 3).map(skill => (
                         <li key={skill}>• {skill}</li>
                       ))}
                     </ul>
