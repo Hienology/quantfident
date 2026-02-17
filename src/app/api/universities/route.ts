@@ -18,32 +18,81 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabaseServer();
 
-    // Get total count for pagination (search both name and abbreviations)
-    const { count, error: countError } = await supabase
-      .from("universities")
-      .select("id", { count: "exact", head: true })
-      .or(`name.ilike.%${query}%,abbreviations.ilike.%${query}%`);
-
-    if (countError) {
-      console.error("[Universities] Count error:", countError);
-    }
-
-    // Search with both name and abbreviations, with pagination
-    const { data: universities, error } = await supabase
+    // Fetch name matches
+    const { data: nameMatches, error: nameError } = await supabase
       .from("universities")
       .select("id, name, country, state, abbreviations")
-      .or(`name.ilike.%${query}%,abbreviations.ilike.%${query}%`)
-      .order("name")
-      .range(offset, offset + limit - 1);
+      .ilike("name", `%${query}%`)
+      .limit(200);
 
-    if (error) {
-      console.error("[Universities] Search error:", error);
+    if (nameError) {
+      console.error("[Universities] Name search error:", nameError);
       return NextResponse.json({ error: "Search failed" }, { status: 500 });
     }
 
+    // Fetch abbreviation matches
+    const { data: abbreviationMatches, error: abbreviationError } =
+      await supabase
+        .from("universities")
+        .select("id, name, country, state, abbreviations")
+        .not("abbreviations", "is", null)
+        .ilike("abbreviations", `%${query}%`)
+        .limit(200);
+
+    if (abbreviationError) {
+      console.error(
+        "[Universities] Abbreviation search error:",
+        abbreviationError,
+      );
+      return NextResponse.json({ error: "Search failed" }, { status: 500 });
+    }
+
+    const mergedById = new Map<
+      number,
+      {
+        id: number;
+        name: string;
+        country: string;
+        state: string | null;
+        abbreviations: string | null;
+      }
+    >();
+    for (const uni of nameMatches || []) {
+      mergedById.set(uni.id, uni);
+    }
+    for (const uni of abbreviationMatches || []) {
+      mergedById.set(uni.id, uni);
+    }
+
+    const rankUniversity = (uni: {
+      name: string;
+      abbreviations: string | null;
+    }) => {
+      const normalizedName = uni.name.toLowerCase();
+      const abbreviationTokens = (uni.abbreviations || "")
+        .split(",")
+        .map((token) => token.trim().toLowerCase())
+        .filter(Boolean);
+
+      if (abbreviationTokens.some((token) => token === query)) return 0;
+      if (abbreviationTokens.some((token) => token.startsWith(query))) return 1;
+      if (normalizedName.startsWith(query)) return 2;
+      if (abbreviationTokens.some((token) => token.includes(query))) return 3;
+      return 4;
+    };
+
+    const sortedUniversities = Array.from(mergedById.values()).sort((a, b) => {
+      const rankDelta = rankUniversity(a) - rankUniversity(b);
+      if (rankDelta !== 0) return rankDelta;
+      return a.name.localeCompare(b.name);
+    });
+
+    const total = sortedUniversities.length;
+    const universities = sortedUniversities.slice(offset, offset + limit);
+
     return NextResponse.json({
       universities,
-      total: count || 0,
+      total,
       offset,
       limit,
     });
