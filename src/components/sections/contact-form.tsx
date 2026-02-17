@@ -527,13 +527,10 @@ export function ContactForm() {
                             </div>
                           </>
                         )}
-                        {/* Allow custom entry */}
+                        {/* Allow custom entry - only when NO matches found */}
                         {schoolSearch.length >= MIN_CHARS &&
-                          !universities.find(
-                            (u) =>
-                              u.name.toLowerCase() ===
-                              schoolSearch.toLowerCase(),
-                          ) && (
+                          universities.length === 0 &&
+                          !isSearching && (
                             <CommandGroup>
                               <CommandItem
                                 value={schoolSearch}
@@ -545,7 +542,7 @@ export function ContactForm() {
                                 }}
                               >
                                 <span className="text-muted-foreground">
-                                  Use:{" "}
+                                  Not in list? Use:{" "}
                                 </span>
                                 <span className="font-medium">
                                   {schoolSearch}
