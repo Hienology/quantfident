@@ -1,5 +1,6 @@
 // University search endpoint for autocomplete
 // GET /api/universities?q=harv&offset=0&limit=10
+// Supports searching by name OR abbreviations (e.g., "NJIT", "MIT", "UCLA")
 
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
@@ -17,21 +18,21 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabaseServer();
 
-    // Get total count for pagination
+    // Get total count for pagination (search both name and abbreviations)
     const { count, error: countError } = await supabase
       .from("universities")
       .select("id", { count: "exact", head: true })
-      .ilike("name", `%${query}%`);
+      .or(`name.ilike.%${query}%,abbreviations.ilike.%${query}%`);
 
     if (countError) {
       console.error("[Universities] Count error:", countError);
     }
 
-    // Search with prefix match and pagination
+    // Search with both name and abbreviations, with pagination
     const { data: universities, error } = await supabase
       .from("universities")
-      .select("id, name, country, state")
-      .ilike("name", `%${query}%`)
+      .select("id, name, country, state, abbreviations")
+      .or(`name.ilike.%${query}%,abbreviations.ilike.%${query}%`)
       .order("name")
       .range(offset, offset + limit - 1);
 
@@ -40,11 +41,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Search failed" }, { status: 500 });
     }
 
-    return NextResponse.json({ 
-      universities, 
+    return NextResponse.json({
+      universities,
       total: count || 0,
       offset,
-      limit
+      limit,
     });
   } catch (error) {
     console.error("[Universities] Unexpected error:", error);

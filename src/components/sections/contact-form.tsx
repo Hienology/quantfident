@@ -42,6 +42,7 @@ interface University {
   name: string;
   country: string;
   state: string | null;
+  abbreviations: string | null;
 }
 
 // Throttle key and duration
@@ -63,7 +64,7 @@ export function ContactForm() {
   const [universities, setUniversities] = useState<University[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSchoolMatched, setIsSchoolMatched] = useState(false);
-  
+
   // Pagination state for university list
   const [uniOffset, setUniOffset] = useState(0);
   const [uniTotal, setUniTotal] = useState(0);
@@ -77,30 +78,33 @@ export function ContactForm() {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Search universities as user types
-  const searchUniversities = useCallback(async (query: string, offset: number = 0) => {
-    if (query.length < MIN_CHARS) {
-      setUniversities([]);
-      setUniTotal(0);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const res = await fetch(
-        `/api/universities?q=${encodeURIComponent(query)}&offset=${offset}&limit=${PAGE_SIZE}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setUniversities(data.universities || []);
-        setUniTotal(data.total || 0);
-        setUniOffset(offset);
+  const searchUniversities = useCallback(
+    async (query: string, offset: number = 0) => {
+      if (query.length < MIN_CHARS) {
+        setUniversities([]);
+        setUniTotal(0);
+        return;
       }
-    } catch (error) {
-      console.error("University search failed:", error);
-    } finally {
-      setIsSearching(false);
-    }
-  }, []);
+
+      setIsSearching(true);
+      try {
+        const res = await fetch(
+          `/api/universities?q=${encodeURIComponent(query)}&offset=${offset}&limit=${PAGE_SIZE}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setUniversities(data.universities || []);
+          setUniTotal(data.total || 0);
+          setUniOffset(offset);
+        }
+      } catch (error) {
+        console.error("University search failed:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [],
+  );
 
   // Debounced search - fast real-time matching
   useEffect(() => {
@@ -456,7 +460,7 @@ export function ContactForm() {
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                 >
-                                  <path d="m18 15-6-6-6 6"/>
+                                  <path d="m18 15-6-6-6 6" />
                                 </svg>
                                 Previous {PAGE_SIZE}
                               </button>
@@ -472,11 +476,19 @@ export function ContactForm() {
                                     setSchoolOpen(false);
                                     setSchoolSearch("");
                                   }}
+                                  className="flex flex-col items-start py-2"
                                 >
-                                  <span>{uni.name}</span>
-                                  {uni.state && (
-                                    <span className="ml-2 text-xs text-muted-foreground">
-                                      {uni.state}
+                                  <div className="flex items-center gap-2">
+                                    <span>{uni.name}</span>
+                                    {uni.state && (
+                                      <span className="text-xs text-muted-foreground">
+                                        {uni.state}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {uni.abbreviations && (
+                                    <span className="text-xs text-muted-foreground">
+                                      Also known as: {uni.abbreviations}
                                     </span>
                                   )}
                                 </CommandItem>
@@ -500,13 +512,18 @@ export function ContactForm() {
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                 >
-                                  <path d="m6 9 6 6 6-6"/>
+                                  <path d="m6 9 6 6 6-6" />
                                 </svg>
                               </button>
                             )}
                             {/* Show result count */}
                             <div className="px-3 py-1.5 text-xs text-muted-foreground text-center border-t">
-                              Showing {uniOffset + 1}-{Math.min(uniOffset + universities.length, uniTotal)} of {uniTotal}
+                              Showing {uniOffset + 1}-
+                              {Math.min(
+                                uniOffset + universities.length,
+                                uniTotal,
+                              )}{" "}
+                              of {uniTotal}
                             </div>
                           </>
                         )}
