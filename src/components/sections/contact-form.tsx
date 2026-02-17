@@ -20,6 +20,13 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FormErrors {
   fullName?: string;
@@ -55,6 +62,10 @@ export function ContactForm() {
   const [schoolSearch, setSchoolSearch] = useState("");
   const [universities, setUniversities] = useState<University[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isSchoolMatched, setIsSchoolMatched] = useState(false);
+
+  // Year dropdown options (2020-2032)
+  const yearOptions = Array.from({ length: 13 }, (_, i) => 2020 + i);
 
   // Debounce timer for university search
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -139,7 +150,6 @@ export function ContactForm() {
     setErrors({});
 
     const formData = new FormData(e.currentTarget);
-    const yearValue = formData.get("undergraduateYear");
 
     // Client-side validation
     const newErrors: FormErrors = {};
@@ -156,9 +166,10 @@ export function ContactForm() {
     if (!school || school.length < 2) {
       newErrors.school = "Please select or enter your school";
     }
-    const year = parseInt(yearValue as string);
-    if (isNaN(year) || year < 2020 || year > 2035) {
-      newErrors.undergraduateYear = "Year must be between 2020 and 2035";
+    const yearValue = formData.get("undergraduateYear") as string;
+    const year = parseInt(yearValue);
+    if (!yearValue || isNaN(year) || year < 2020 || year > 2032) {
+      newErrors.undergraduateYear = "Please select your undergraduate year";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -230,7 +241,7 @@ export function ContactForm() {
   if (isSuccess) {
     return (
       <Section>
-        <Card className="max-w-2xl mx-auto">
+      <Card>
           <CardContent className="py-12 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <svg
@@ -261,7 +272,7 @@ export function ContactForm() {
 
   return (
     <Section>
-      <Card className="max-w-2xl mx-auto">
+      <Card>
         <CardHeader className="text-center pb-2">
           <CardTitle className="text-2xl md:text-3xl font-serif">
             Contact Us
@@ -343,9 +354,26 @@ export function ContactForm() {
                       role="combobox"
                       aria-expanded={schoolOpen}
                       aria-invalid={!!errors.school}
-                      className="w-full justify-between font-normal"
+                      className={`w-full justify-between font-normal ${isSchoolMatched ? "border-green-500 ring-1 ring-green-500" : ""}`}
                     >
-                      {schoolValue || "Search for your school..."}
+                      <span className="flex items-center gap-2">
+                        {schoolValue || "Search for your school..."}
+                        {isSchoolMatched && (
+                          <svg
+                            className="h-4 w-4 text-green-500"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                          </svg>
+                        )}
+                      </span>
                       <svg
                         className="ml-2 h-4 w-4 shrink-0 opacity-50"
                         xmlns="http://www.w3.org/2000/svg"
@@ -392,6 +420,7 @@ export function ContactForm() {
                                 value={uni.name}
                                 onSelect={() => {
                                   setSchoolValue(uni.name);
+                                  setIsSchoolMatched(true);
                                   setSchoolOpen(false);
                                   setSchoolSearch("");
                                 }}
@@ -418,6 +447,7 @@ export function ContactForm() {
                                 value={schoolSearch}
                                 onSelect={() => {
                                   setSchoolValue(schoolSearch);
+                                  setIsSchoolMatched(false);
                                   setSchoolOpen(false);
                                   setSchoolSearch("");
                                 }}
@@ -445,18 +475,24 @@ export function ContactForm() {
                 <Label htmlFor="undergraduateYear">
                   Undergraduate Year <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="undergraduateYear"
-                  name="undergraduateYear"
-                  type="number"
-                  min={2020}
-                  max={2035}
-                  placeholder="2026"
-                  aria-invalid={!!errors.undergraduateYear}
-                  aria-describedby={
-                    errors.undergraduateYear ? "year-error" : undefined
-                  }
-                />
+                <Select name="undergraduateYear">
+                  <SelectTrigger
+                    id="undergraduateYear"
+                    aria-invalid={!!errors.undergraduateYear}
+                    aria-describedby={
+                      errors.undergraduateYear ? "year-error" : undefined
+                    }
+                  >
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {yearOptions.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {errors.undergraduateYear && (
                   <p id="year-error" className="text-sm text-destructive">
                     {errors.undergraduateYear}

@@ -16,7 +16,7 @@ export const contactFormSchema = z.object({
     .number()
     .int("Year must be a whole number")
     .min(2020, "Year must be 2020 or later")
-    .max(2035, "Year must be 2035 or earlier"),
+    .max(2032, "Year must be 2032 or earlier"),
   message: z
     .string()
     .max(5000, "Message must be less than 5000 characters")
