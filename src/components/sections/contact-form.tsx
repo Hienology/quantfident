@@ -1,25 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Section } from "./section";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import {
   Select,
   SelectContent,
@@ -37,14 +24,6 @@ interface FormErrors {
   form?: string;
 }
 
-interface University {
-  id: number;
-  name: string;
-  country: string;
-  state: string | null;
-  abbreviations: string | null;
-}
-
 // Throttle key and duration
 const THROTTLE_KEY = "qf_contact_last_submit";
 const THROTTLE_DURATION_MS = 5000; // 5 seconds between submissions
@@ -57,91 +36,8 @@ export function ContactForm() {
   // Form load timestamp for anti-spam
   const [formLoadedAt] = useState(() => Date.now());
 
-  // University autocomplete state
-  const [schoolOpen, setSchoolOpen] = useState(false);
-  const [schoolValue, setSchoolValue] = useState("");
-  const [schoolSearch, setSchoolSearch] = useState("");
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [isSchoolMatched, setIsSchoolMatched] = useState(false);
-
-  // Pagination state for university list
-  const [uniOffset, setUniOffset] = useState(0);
-  const [uniTotal, setUniTotal] = useState(0);
-  const PAGE_SIZE = 10;
-  const MIN_CHARS = 2;
-
   // Year dropdown options (2020-2032)
   const yearOptions = Array.from({ length: 13 }, (_, i) => 2020 + i);
-
-  // Debounce timer for university search
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Search universities as user types
-  const searchUniversities = useCallback(
-    async (query: string, offset: number = 0) => {
-      if (query.length < MIN_CHARS) {
-        setUniversities([]);
-        setUniTotal(0);
-        return;
-      }
-
-      setIsSearching(true);
-      try {
-        const res = await fetch(
-          `/api/universities?q=${encodeURIComponent(query)}&offset=${offset}&limit=${PAGE_SIZE}`,
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setUniversities(data.universities || []);
-          setUniTotal(data.total || 0);
-          setUniOffset(offset);
-        }
-      } catch (error) {
-        console.error("University search failed:", error);
-      } finally {
-        setIsSearching(false);
-      }
-    },
-    [],
-  );
-
-  // Debounced search - fast real-time matching
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    if (schoolSearch.length >= MIN_CHARS) {
-      // Reset pagination when search query changes
-      setUniOffset(0);
-      searchTimeoutRef.current = setTimeout(() => {
-        searchUniversities(schoolSearch, 0);
-      }, 150); // Fast 150ms debounce for real-time feel
-    } else {
-      setUniversities([]);
-      setUniTotal(0);
-    }
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [schoolSearch, searchUniversities]);
-
-  // Pagination handlers
-  const handlePrevPage = () => {
-    if (uniOffset > 0) {
-      searchUniversities(schoolSearch, Math.max(0, uniOffset - PAGE_SIZE));
-    }
-  };
-
-  const handleNextPage = () => {
-    if (uniOffset + PAGE_SIZE < uniTotal) {
-      searchUniversities(schoolSearch, uniOffset + PAGE_SIZE);
-    }
-  };
 
   // Check client-side throttle
   function isThrottled(): boolean {
@@ -184,7 +80,7 @@ export function ContactForm() {
     const newErrors: FormErrors = {};
     const fullName = (formData.get("fullName") as string)?.trim();
     const email = (formData.get("email") as string)?.trim();
-    const school = schoolValue.trim();
+    const school = (formData.get("school") as string)?.trim();
 
     if (!fullName || fullName.length < 2) {
       newErrors.fullName = "Name must be at least 2 characters";
@@ -193,12 +89,16 @@ export function ContactForm() {
       newErrors.email = "Please enter a valid email address";
     }
     if (!school || school.length < 2) {
-      newErrors.school = "Please select or enter your school";
+      newErrors.school = "Please enter your school name";
     }
     const yearValue = formData.get("undergraduateYear") as string;
     const year = parseInt(yearValue);
     if (!yearValue || isNaN(year) || year < 2020 || year > 2032) {
       newErrors.undergraduateYear = "Please select your undergraduate year";
+    }
+    const message = (formData.get("message") as string)?.trim();
+    if (!message || message.length < 2) {
+      newErrors.message = "Please enter your comments or questions";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -370,190 +270,19 @@ export function ContactForm() {
               </div>
             </div>
 
-            {/* Row 2: School (Autocomplete) + Year */}
+            {/* Row 2: School + Year */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="school">
                   School <span className="text-destructive">*</span>
                 </Label>
-                <Popover open={schoolOpen} onOpenChange={setSchoolOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={schoolOpen}
-                      aria-invalid={!!errors.school}
-                      className={`w-full justify-between font-normal ${isSchoolMatched ? "border-green-500 ring-1 ring-green-500" : ""}`}
-                    >
-                      <span className="flex items-center gap-2">
-                        {schoolValue || "Search for your school..."}
-                        {isSchoolMatched && (
-                          <svg
-                            className="h-4 w-4 text-green-500"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                            <polyline points="22 4 12 14.01 9 11.01" />
-                          </svg>
-                        )}
-                      </span>
-                      <svg
-                        className="ml-2 h-4 w-4 shrink-0 opacity-50"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="m7 15 5 5 5-5" />
-                        <path d="m7 9 5-5 5 5" />
-                      </svg>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-0" align="start">
-                    <Command shouldFilter={false}>
-                      <CommandInput
-                        placeholder="Type to search schools..."
-                        value={schoolSearch}
-                        onValueChange={setSchoolSearch}
-                      />
-                      <CommandList>
-                        {isSearching && (
-                          <div className="py-6 text-center text-sm text-muted-foreground">
-                            Searching...
-                          </div>
-                        )}
-                        {!isSearching &&
-                          schoolSearch.length >= MIN_CHARS &&
-                          universities.length === 0 && (
-                            <CommandEmpty>
-                              No schools found. You can type your school name
-                              and press Enter.
-                            </CommandEmpty>
-                          )}
-                        {!isSearching && universities.length > 0 && (
-                          <>
-                            {/* Pagination: Previous button */}
-                            {uniOffset > 0 && (
-                              <button
-                                type="button"
-                                onClick={handlePrevPage}
-                                className="w-full py-2 px-3 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground border-b"
-                              >
-                                <svg
-                                  className="h-4 w-4"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="m18 15-6-6-6 6" />
-                                </svg>
-                                Previous {PAGE_SIZE}
-                              </button>
-                            )}
-                            <CommandGroup>
-                              {universities.map((uni) => (
-                                <CommandItem
-                                  key={uni.id}
-                                  value={uni.name}
-                                  onSelect={() => {
-                                    setSchoolValue(uni.name);
-                                    setIsSchoolMatched(true);
-                                    setSchoolOpen(false);
-                                    setSchoolSearch("");
-                                  }}
-                                  className="flex flex-col items-start py-2"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span>{uni.name}</span>
-                                    {uni.state && (
-                                      <span className="text-xs text-muted-foreground">
-                                        {uni.state}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {uni.abbreviations && (
-                                    <span className="text-xs text-muted-foreground">
-                                      Also known as: {uni.abbreviations}
-                                    </span>
-                                  )}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                            {/* Pagination: Next button */}
-                            {uniOffset + PAGE_SIZE < uniTotal && (
-                              <button
-                                type="button"
-                                onClick={handleNextPage}
-                                className="w-full py-2 px-3 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground border-t"
-                              >
-                                Next {PAGE_SIZE}
-                                <svg
-                                  className="h-4 w-4"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="m6 9 6 6 6-6" />
-                                </svg>
-                              </button>
-                            )}
-                            {/* Show result count */}
-                            <div className="px-3 py-1.5 text-xs text-muted-foreground text-center border-t">
-                              Showing {uniOffset + 1}-
-                              {Math.min(
-                                uniOffset + universities.length,
-                                uniTotal,
-                              )}{" "}
-                              of {uniTotal}
-                            </div>
-                          </>
-                        )}
-                        {/* Allow custom entry - only when NO matches found */}
-                        {schoolSearch.length >= MIN_CHARS &&
-                          universities.length === 0 &&
-                          !isSearching && (
-                            <CommandGroup>
-                              <CommandItem
-                                value={schoolSearch}
-                                onSelect={() => {
-                                  setSchoolValue(schoolSearch);
-                                  setIsSchoolMatched(false);
-                                  setSchoolOpen(false);
-                                  setSchoolSearch("");
-                                }}
-                              >
-                                <span className="text-muted-foreground">
-                                  Not in list? Use:{" "}
-                                </span>
-                                <span className="font-medium">
-                                  {schoolSearch}
-                                </span>
-                              </CommandItem>
-                            </CommandGroup>
-                          )}
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  id="school"
+                  name="school"
+                  placeholder="Enter your school name"
+                  aria-invalid={!!errors.school}
+                  aria-describedby={errors.school ? "school-error" : undefined}
+                />
                 {errors.school && (
                   <p id="school-error" className="text-sm text-destructive">
                     {errors.school}
@@ -594,9 +323,7 @@ export function ContactForm() {
             <div className="space-y-2">
               <Label htmlFor="message">
                 Comments or Questions{" "}
-                <span className="text-muted-foreground text-xs">
-                  (Optional)
-                </span>
+                <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="message"
