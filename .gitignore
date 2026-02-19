@@ -45,3 +45,4 @@ database-schema.sql
 
 # Private implementation notes
 private-notes.md
+.env*.local
