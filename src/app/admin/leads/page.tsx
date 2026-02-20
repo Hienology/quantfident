@@ -133,6 +133,34 @@ export default function AdminLeadsPage() {
     );
   }
 
+  function exportToCSV() {
+    if (leads.length === 0) return;
+    
+    const headers = ["Name", "Email", "School", "Year", "Message", "Status", "Date"];
+    const rows = leads.map(lead => [
+      lead.full_name,
+      lead.email,
+      lead.school,
+      lead.undergraduate_year,
+      lead.message || "",
+      lead.status,
+      new Date(lead.created_at).toISOString(),
+    ]);
+    
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `leads-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="container py-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -143,10 +171,18 @@ export default function AdminLeadsPage() {
           </p>
         </div>
 
-        {/* Filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Filter:</span>
-          <select
+        {/* Filter & Export */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={exportToCSV}
+            disabled={leads.length === 0}
+            className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+          >
+            Export CSV
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Filter:</span>
+            <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="border rounded-md px-3 py-1.5 text-sm bg-background"
