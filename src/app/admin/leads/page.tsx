@@ -123,16 +123,6 @@ export default function AdminLeadsPage() {
     });
   }
 
-  if (error) {
-    return (
-      <div className="container py-8">
-        <div className="p-4 rounded-md bg-destructive/10 border border-destructive/20">
-          <p className="text-destructive">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   function exportToCSV() {
     if (leads.length === 0) return;
     
@@ -161,6 +151,16 @@ export default function AdminLeadsPage() {
     URL.revokeObjectURL(url);
   }
 
+  if (error) {
+    return (
+      <div className="container py-8">
+        <div className="p-4 rounded-md bg-destructive/10 border border-destructive/20">
+          <p className="text-destructive">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -183,15 +183,16 @@ export default function AdminLeadsPage() {
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Filter:</span>
             <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="border rounded-md px-3 py-1.5 text-sm bg-background"
-          >
-            <option value="all">All</option>
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="resolved">Resolved</option>
-          </select>
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="border rounded-md px-3 py-1.5 text-sm bg-background"
+            >
+              <option value="all">All</option>
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="resolved">Resolved</option>
+            </select>
+          </div>
         </div>
       </div>
 
