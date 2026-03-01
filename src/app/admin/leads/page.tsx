@@ -125,9 +125,17 @@ export default function AdminLeadsPage() {
 
   function exportToCSV() {
     if (leads.length === 0) return;
-    
-    const headers = ["Name", "Email", "School", "Year", "Message", "Status", "Date"];
-    const rows = leads.map(lead => [
+
+    const headers = [
+      "Name",
+      "Email",
+      "School",
+      "Year",
+      "Message",
+      "Status",
+      "Date",
+    ];
+    const rows = leads.map((lead) => [
       lead.full_name,
       lead.email,
       lead.school,
@@ -136,12 +144,14 @@ export default function AdminLeadsPage() {
       lead.status,
       new Date(lead.created_at).toISOString(),
     ]);
-    
+
     const csvContent = [
       headers.join(","),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      ...rows.map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+      ),
     ].join("\n");
-    
+
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
